@@ -1,47 +1,74 @@
-import React from "react";
-import { Tabs } from "expo-router";
-import { Home, Sprout } from "lucide-react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { Platform } from "react-native";
 import Colors from "@/constants/colors";
 
-export default function TabLayout() {
+import { ErrorBoundary } from "./error-boundary";
+
+export const unstable_settings = {
+  initialRouteName: "(tabs)",
+};
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    ...FontAwesome.font,
+  });
+
+  useEffect(() => {
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
+
   return (
-    <Tabs
+    <ErrorBoundary>
+      <RootLayoutNav />
+    </ErrorBoundary>
+  );
+}
+
+function RootLayoutNav() {
+  return (
+    <Stack
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.lightText,
-        tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.border,
-        },
+        headerBackTitle: "Back",
         headerStyle: {
           backgroundColor: Colors.background,
         },
+        headerTintColor: Colors.primary,
         headerTitleStyle: {
           color: Colors.text,
-          fontWeight: '600',
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+        contentStyle: {
+          backgroundColor: Colors.background,
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "My Fridge",
-          tabBarLabel: "Fridge",
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
-        }}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="regrowable/[id]" 
+        options={{ 
+          title: "Growing Instructions",
+          headerBackTitle: "Back",
+        }} 
       />
-      <Tabs.Screen
-        name="garden"
-        options={{
-          title: "Garden Potential",
-          tabBarLabel: "Garden",
-          tabBarIcon: ({ color }) => <Sprout size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+    </Stack>
   );
 }
